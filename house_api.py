@@ -1,6 +1,5 @@
 import json
 
-from bson import json_util
 from flask import Flask, make_response, request
 from flasgger import Swagger
 
@@ -38,6 +37,15 @@ def get_houses():
         items:
           type: string
         minItems: 1
+    - name: "gender"
+      in: "query"
+      description: "gender of the seller"
+      type: "string"
+      enum: [male, female, other]
+    - name: "first_name"
+      in: "query"
+      description: "first name of the seller"
+      type: "string"
     responses:
       200:
         description: A list of House info
@@ -50,7 +58,9 @@ def get_houses():
     role = request.args.get('role')
     districts = request.args.get('districts')
     districts = districts.split(',')
-    houses = mongo_pipe.get_houses(number=number, gender_limit=gender_limit, role=role, districts=districts)
+    gender = request.args.get('gender')
+    first_name = request.args.get('first_name')
+    houses = mongo_pipe.get_houses(number=number, gender_limit=gender_limit, role=role, districts=districts, gender=gender, first_name=first_name)
     temp = []
     for h in houses:
         if len(temp) >= 1000:

@@ -19,7 +19,7 @@ class MongoPipeline:
         self.collection.insert_many(data)
         return house_info_list
 
-    def get_houses(self, number=None, gender_limit=None, role=None, districts=None):
+    def get_houses(self, number=None, gender_limit=None, role=None, districts=None, gender=None, first_name=None):
         myquery = {"phone_num": number} if number else {}
         if gender_limit:
             if gender_limit == "male":
@@ -34,4 +34,19 @@ class MongoPipeline:
                 myquery["role"] = {"$ne": "屋主"}
         if districts:
             myquery["district"] = {"$in": districts}
+
+        if gender:
+            if gender == "male":
+                myquery["name"] = {"$regex": "先生$"}
+            elif gender == "female":
+                myquery["name"] = {"$regex": "(小姐|太太)$"}
+
+        if first_name:
+            new_query = {"$regex": f"{first_name}"}
+            if "name" in myquery.keys():
+                temp = myquery
+                myquery = {"$and": [temp, {"name": new_query}]}
+            else:
+                myquery["name"] = new_query
+
         return self.collection.find(myquery)
