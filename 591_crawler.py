@@ -6,7 +6,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from house import House
-from settings import MongoPipeline
+from mongo_client import MongoPipeline
 
 
 chromedriver = r"driver\chromedriver.exe"
@@ -34,8 +34,10 @@ with webdriver.Chrome(chromedriver) as browser:
     # ...
     # //*[@id="content"]/ul[30]/li[2]/h3/a
     # //*[@id="content"]/ul[1]/li[2]/h3/a
-
-    clickme = browser.find_element_by_xpath('//*[@id="area-box-body"]/dl[1]/dd[1]')
+    target_city = "台北市"
+    districts = {"台北市": '//*[@id="area-box-body"]/dl[1]/dd[1]',
+                 "新北市": '//*[@id="area-box-body"]/dl[1]/dd[2]'}
+    clickme = browser.find_element_by_xpath(districts["台北市"])
     clickme.click()
     time.sleep(10)
 
@@ -96,7 +98,7 @@ with webdriver.Chrome(chromedriver) as browser:
             except:
                 pass
             # print("accepted_gender: ", accepted_gender)
-            house = House(house_id, "台北市", name, role, phone_num, house_kind, room_kind, accepted_gender)
+            house = House(house_id, target_city, name, role, phone_num, house_kind, room_kind, accepted_gender)
             temp.append(house)
             # browser.switch_to.window(browser.window_handles[0])
             browser.switch_to.window(cur_win)
