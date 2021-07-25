@@ -1,79 +1,51 @@
-from flask import Flask, jsonify
+import json
+
+from bson import json_util
+from flask import Flask, jsonify, Response, make_response
 from flasgger import Swagger
 
+from house import House
+from settings import MongoPipeline
+
+
+def parse_json(data):
+    return json.loads(json_util.dumps(data))
+
+mongo_pipe = MongoPipeline()
 app = Flask(__name__)
 swagger = Swagger(app)
 
-@app.route('/phone/<palette>/')
-def colors(palette):
-    """Example endpoint returning a list of phone by palette
-    This is using docstrings for specifications.
-    ---
-    parameters:
-      - name: palette
-        in: path
-        type: string
-        enum: ['all', 'rgb', 'cmyk']
-        required: true
-        default: all
-    definitions:
-      Palette:
-        type: object
-        properties:
-          palette_name:
-            type: array
-            items:
-              $ref: '#/definitions/Color'
-      Color:
-        type: string
-    responses:
-      200:
-        description: A list of phone (may be filtered by palette)
-        schema:
-          $ref: '#/definitions/Palette'
-        examples:
-          rgb: ['red', 'green', 'blue']
-    """
-    all_colors = {
-        'cmyk': ['cian', 'magenta', 'yellow', 'black'],
-        'rgb': ['red', 'green', 'blue']
-    }
-    if palette == 'all':
-        result = all_colors
-    else:
-        result = {palette: all_colors.get(palette)}
 
-    return jsonify(result)
-
-
+@app.route('/phone_num/<number>/')
 def get_houses(number):
-    # search mongo db
-    raise NotImplemented
-
-
-def is_valid_phone_num(number):
-    pass
-
-
-@app.route('/phone/<number>/')
-def phone(number):
-    """Search listings by phone number
+    """
+    This text is the description for this API.
     ---
     parameters:
-      - number: number
-    definitions:
-      number:
-        type: number
+    - name: "number"
+      in: "path"
+      description: "The phone number includes hypens. ex: 02-23753388"
+      required: true
+      type: "string"
     responses:
       200:
-        description: A list of rent listings
+        description: A list of House info
+        schema:
+          number:
+            type: object
     """
-    if not is_valid_phone_num(number):
-        return jsonify()  # return 4xx
-
-    result = get_houses(number)
-
-    return jsonify(result)
+    houses = mongo_pipe.get_houses(number)
+    temp = []
+    for h in houses:
+        temp.append(vars(House(h["id"],
+                    h["district"],
+                    h["name"],
+                    h["role"],
+                    h["phone_num"],
+                    h["house_kind"],
+                    h["room_kind"],
+                    h["accepted_gender"])))
+    return make_response(json.dumps(temp,ensure_ascii=False))
 
 
 app.run(debug=True)
